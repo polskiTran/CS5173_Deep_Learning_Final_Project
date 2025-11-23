@@ -1,9 +1,9 @@
 - # Data
-	- https://huggingface.co/datasets/mingyy/chinese_landscape_paintings_1k - 1000 images
+	- https://huggingface.co/datasets/mingyy/chinese_landscape_paintings - 5000 images
 		- Target - generated landscape target
 		- filename
 		- image_caption
-		- source - original sketches
+		- source - original painintings/sketches
 		- hed -  Edge detection
 	- https://huggingface.co/datasets/WUYONGF/chinese_painting - 30 high res images
 		- image - original sketches

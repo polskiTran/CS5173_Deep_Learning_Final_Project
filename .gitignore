@@ -1,0 +1,8 @@
+Data/raw_data/
+Data/processed_data/
+Data/chinese_landscapes_paintings_huggingface/
+Data/chinese_landscapes_paintings/
+Data/Landscape/
+Data/post_processed_chinese_landscapes_paintings/
+Data/post_processed_chinese_landscapes_paintings_huggingface/
+Data/post_processed_Landscape/
