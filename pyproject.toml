@@ -18,6 +18,7 @@ dependencies = [
     "kagglehub>=0.3.13",
     "datasets>=4.4.1",
     "opencv-python>=4.11.0.86",
+    "gdown>=5.2.0",
 ]
 
 [dependency-groups]
@@ -38,9 +39,9 @@ explicit = true
 [tool.uv.sources]
 torch = [
   { index = "pytorch-cu128", marker = "sys_platform == 'win32'" },
-  { index = "pytorch-cpu", marker = "sys_platform != 'win32'" },
+  { index = "pytorch-cu128", marker = "sys_platform == 'linux'" },
 ]
 torchvision = [
   { index = "pytorch-cu128", marker = "sys_platform == 'win32'" },
-  { index = "pytorch-cpu", marker = "sys_platform != 'win32'" },
+  { index = "pytorch-cu128", marker = "sys_platform == 'linux'" },
 ]
