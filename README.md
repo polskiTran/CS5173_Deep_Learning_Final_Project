@@ -6,7 +6,7 @@
 
 ## How to run notebooks 
 
-### **Option 1** 
+### **Option 1** (Recommended)
 - Install dependencies: Using [`uv`](https://docs.astral.sh/uv/) ([Rust based python package manager](https://docs.astral.sh/uv/)) *(Recommended)*
 ```shell
 uv sync
@@ -23,6 +23,7 @@ uv run ipython kernel install --user --env VIRTUAL_ENV=$(pwd)/.venv --name=dl_pr
 pip install -r requirements.txt
 ```
 - In the jupyter notebook, choose the venv with installed dependcies and run the notebook.
+
 
 
 
