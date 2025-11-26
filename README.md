@@ -29,6 +29,14 @@ pip install -r requirements.txt
 ```shell
 tmux
 ``` 
+- To export the `.ipynb` file to `.py` script run the command
+```shell
+jupyter nbconvert --to script model_training.ipynb
+```
+- To run the training script run the command
+```shell
+uv run model_training.py
+```
 - Detach the current session so it continue running in background via `Ctrl + b d` (hitting ctrl key and b key at the same time then d key)
 - You are now good to close the remote access session
 - To go back to the running training session use command
