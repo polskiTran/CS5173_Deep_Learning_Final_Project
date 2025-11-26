@@ -3,7 +3,7 @@
 
 # # Google colab
 
-# In[1]:
+# In[50]:
 
 
 # if 'google.colab' in str(get_ipython()):
@@ -12,7 +12,7 @@
 #     GOOGLE_COLAB = False
 
 
-# In[2]:
+# In[51]:
 
 
 # # Mount Google Drive if in Colab
@@ -23,7 +23,7 @@
 
 # # Imports
 
-# In[3]:
+# In[52]:
 
 
 
@@ -49,7 +49,7 @@ from torchvision.utils import save_image
 from tqdm import tqdm # change to tqdm for .py scripts
 
 
-# In[4]:
+# In[53]:
 
 
 # using the assigned GPU
@@ -58,13 +58,13 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "3"
 
 # # GPU
 
-# In[5]:
+# In[54]:
 
 
 # !nvidia-smi
 
 
-# In[6]:
+# In[55]:
 
 
 def check_gpu():    
@@ -88,21 +88,19 @@ device = check_gpu()
 
 # # Data
 
-# In[7]:
+# In[56]:
 
 
 DATA_BASE_PATH = "Data/"
 # SANITY_CHECK_DATA_PATH = os.path.join(DATA_BASE_PATH, "post_processed_chinese_landscapes_paintings_huggingface_1k/photos")  # used for sanity check the model training
 # PAINTINGS_DATA_PATH = os.path.join(DATA_BASE_PATH, "post_processed_chinese_landscapes_paintings_huggingface/photos")        # full dataset of 35000 paintings
-# PHOTOS_DATA_PATH = os.path.join(DATA_BASE_PATH, "post_processed_Landscape/photos")                                          # full dataset of 4319 landscape photos
-HIDDEN_TEST_DATA_PATH = os.path.join(DATA_BASE_PATH, "post_processed_chinese_landscapes_paintings/photos")                         # Hidden test set, 25 paintings
-TRAIN_PAINTINGS_DATA_PATH = os.path.join(DATA_BASE_PATH, "xue2020_photo2painting_dataset/trainA")                        # full dataset of 2000 paintings
-TRAIN_PHOTOS_DATA_PATH = os.path.join(DATA_BASE_PATH, "xue2020_photo2painting_dataset/trainB")                          # full dataset of 2192 landscape photos
-TEST_PHOTOS_DATA_PATH = os.path.join(DATA_BASE_PATH, "xue2020_photo2painting_dataset/testB")                    # full dataset of 119 landscape photos
-TEST_PAINTINGS_DATA_PATH = os.path.join(DATA_BASE_PATH, "xue2020_photo2painting_dataset/testA")                # full dataset of 119 paintings
+
+HIDDEN_TEST_DATA_PATH = os.path.join(DATA_BASE_PATH, "post_processed_chinese_landscapes_paintings/photos")      # Hidden test set, 25 paintings
+PAINTINGS_DATA_PATH = os.path.join(DATA_BASE_PATH, "xue2020_dataset/trainA")                                    # full dataset of 2000 paintings
+PHOTOS_DATA_PATH = os.path.join(DATA_BASE_PATH, "post_processed_Landscape/photos")                              # full dataset of 4319 landscape photos
 
 
-# In[8]:
+# In[57]:
 
 
 # get num images in a folder
@@ -120,15 +118,13 @@ def count_images_in_folder(folder_path):
 
 # Load the dataset from Hugging Face
 print(f"(*) Num images in folder {HIDDEN_TEST_DATA_PATH}: {count_images_in_folder(HIDDEN_TEST_DATA_PATH)}")
-print(f"(*) Num images in folder {TRAIN_PAINTINGS_DATA_PATH}: {count_images_in_folder(TRAIN_PAINTINGS_DATA_PATH)}")
-print(f"(*) Num images in folder {TRAIN_PHOTOS_DATA_PATH}: {count_images_in_folder(TRAIN_PHOTOS_DATA_PATH)}")
-print(f"(*) Num images in folder {TEST_PAINTINGS_DATA_PATH}: {count_images_in_folder(TEST_PAINTINGS_DATA_PATH)}")
-print(f"(*) Num images in folder {TEST_PHOTOS_DATA_PATH}: {count_images_in_folder(TEST_PHOTOS_DATA_PATH)}")
+print(f"(*) Num images in folder {PAINTINGS_DATA_PATH}: {count_images_in_folder(PAINTINGS_DATA_PATH)}")
+print(f"(*) Num images in folder {PHOTOS_DATA_PATH}: {count_images_in_folder(PHOTOS_DATA_PATH)}")
 
 
 # ## Dataset class
 
-# In[9]:
+# In[58]:
 
 
 class UnpairedDataset(Dataset):
@@ -156,6 +152,10 @@ class UnpairedDataset(Dataset):
             # Get list of all image files in both directories
             self.files_a = sorted([os.path.join(root_a, x) for x in os.listdir(root_a) if self._is_image(x)])
             self.files_b = sorted([os.path.join(root_b, x) for x in os.listdir(root_b) if self._is_image(x)])
+            
+        # limit files_b to the size of files_a for training stability
+        if mode == 'train' and len(self.files_b) > len(self.files_a):
+            self.files_b = self.files_b[:len(self.files_a)]
         
         # Handle empty directories
         if len(self.files_a) == 0 or len(self.files_b) == 0:
@@ -224,8 +224,8 @@ def get_transforms(img_size=512, is_train=True):
 if __name__ == "__main__":
     
     # Example paths (Update these to your actual folders)
-    path_paintings = TRAIN_PAINTINGS_DATA_PATH
-    path_photos = TRAIN_PHOTOS_DATA_PATH
+    path_paintings = PAINTINGS_DATA_PATH
+    path_photos = PHOTOS_DATA_PATH
     
     # Create transforms
     transforms_ = get_transforms(img_size=512, is_train=True)
@@ -251,7 +251,7 @@ if __name__ == "__main__":
 
 # ## Split Data
 
-# In[10]:
+# In[59]:
 
 
 # split data into training and testing sets
@@ -303,22 +303,42 @@ def get_train_test_filenames(path, dataset_size=None, split_ratio=0.8):
 
 # test the function
 if __name__ == "__main__":
+    # split paintings
+    train_paintings, test_paintings = get_train_test_filenames(
+        PAINTINGS_DATA_PATH, 
+        dataset_size=DATASET_SIZE, 
+        split_ratio=TRAIN_SPLIT
+    )
+    # split photos
+    train_photos, test_photos = get_train_test_filenames(
+        PHOTOS_DATA_PATH, 
+        dataset_size=DATASET_SIZE, 
+        split_ratio=TRAIN_SPLIT
+    )
+    
     # to dataset objects
     train_dataset = UnpairedDataset(
-        root_a=TRAIN_PAINTINGS_DATA_PATH,
-        root_b=TRAIN_PHOTOS_DATA_PATH,
+        root_a=PAINTINGS_DATA_PATH,
+        root_b=PHOTOS_DATA_PATH,
         transforms_=get_transforms(img_size=512, is_train=True),
+        preloaded_split=(train_paintings, train_photos)
     )
 
     test_dataset = UnpairedDataset(
-        root_a=TEST_PAINTINGS_DATA_PATH,
-        root_b=TEST_PHOTOS_DATA_PATH,
+        root_a=PAINTINGS_DATA_PATH,
+        root_b=PHOTOS_DATA_PATH,
         transforms_=get_transforms(img_size=512, is_train=False),
+        preloaded_split=(test_paintings, test_photos)
     )
 
     # Sanity check
     print(f"(*) Training Dataset length: {len(train_dataset)}")
     print(f"(*) Testing Dataset length: {len(test_dataset)}")
+    
+    
+    # check number fo files for each domain
+    print(f"Number of training paintings: {len(train_dataset.files_a)}")
+    print(f"Number of training photos: {len(train_dataset.files_b)}")
     
     # print first few filenames
     print("First 5 training painting filenames:")
@@ -328,7 +348,7 @@ if __name__ == "__main__":
 
 # # GAN
 
-# In[11]:
+# In[60]:
 
 
 def init_weights_gaussian(m):
@@ -352,7 +372,7 @@ def init_weights_gaussian(m):
             torch.nn.init.constant_(m.bias.data, 0.0)
 
 
-# In[12]:
+# In[61]:
 
 
 class ResidualBlock(nn.Module):
@@ -568,7 +588,7 @@ class Discriminator(nn.Module):
         return self.model(x)
 
 
-# In[13]:
+# In[62]:
 
 
 class VGGLoss(nn.Module):
@@ -666,7 +686,7 @@ class GANLoss(nn.Module):
 
 # # Training
 
-# In[14]:
+# In[63]:
 
 
 def save_checkpoint(state, save_path, is_best=False):
@@ -691,7 +711,7 @@ def save_checkpoint(state, save_path, is_best=False):
     print(f"Checkpoint saved: {filename}")
 
 
-# In[15]:
+# In[64]:
 
 
 class SketchToPhotoInference:
@@ -792,14 +812,14 @@ class SketchToPhotoInference:
 #         print("Error: Model checkpoint or input image not found. Please check paths.")
 
 
-# In[16]:
+# In[67]:
 
 
 # --- CONFIGURATION ---
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 LR = 0.0002
 EPOCHS = 200 # 200
-BATCH_SIZE = 1
+BATCH_SIZE = 2
 VAL_INTERVAL = 10  # Run validation every 10 epochs
 SAVE_DIR = "./results"
 CHECKPOINT_DIR = "./checkpoints"
@@ -839,25 +859,35 @@ criterion_Id = torch.nn.L1Loss()
 transforms_train = get_transforms(img_size=512, is_train=True)
 transforms_test = get_transforms(img_size=512, is_train=False)
 
-# train_paintings, test_paintings = get_train_test_filenames(SANITY_CHECK_DATA_PATH, dataset_size=DATASET_SIZE, split_ratio=TRAIN_SPLIT) # chinese landscape paintings
-# train_photos, test_photos = get_train_test_filenames(PHOTOS_DATA_PATH, dataset_size=DATASET_SIZE, split_ratio=TRAIN_SPLIT) # landscape photos
+train_paintings, test_paintings = get_train_test_filenames(PAINTINGS_DATA_PATH, dataset_size=DATASET_SIZE, split_ratio=TRAIN_SPLIT) # chinese landscape paintings
+train_photos, test_photos = get_train_test_filenames(PHOTOS_DATA_PATH, dataset_size=DATASET_SIZE, split_ratio=TRAIN_SPLIT) # landscape photos
 
 # create datasets
 train_dataset = UnpairedDataset(
-    root_a=TRAIN_PAINTINGS_DATA_PATH,
-    root_b=TRAIN_PHOTOS_DATA_PATH,
+    root_a=PAINTINGS_DATA_PATH,
+    root_b=PHOTOS_DATA_PATH,
     transforms_=transforms_train,
+    preloaded_split=(train_paintings, train_photos)
 )
 
 test_dataset = UnpairedDataset(
-    root_a=TEST_PAINTINGS_DATA_PATH,
-    root_b=TEST_PHOTOS_DATA_PATH,
+    root_a=PAINTINGS_DATA_PATH,
+    root_b=PHOTOS_DATA_PATH,
     transforms_=transforms_test,
+    preloaded_split=(test_paintings, test_photos)
 )
+
+# check length of each domain
+print(f"(*) Training Dataset length: {len(train_dataset)}")
+print(f"(*) Testing Dataset length: {len(test_dataset)}")
+print(f"(*) Number of training paintings: {len(train_dataset.files_a)}")
+print(f"(*) Number of training photos: {len(train_dataset.files_b)}")
+print(f"(*) Number of testing paintings: {len(test_dataset.files_a)}")
+print(f"(*) Number of testing photos: {len(test_dataset.files_b)}")
 
 train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
 # We only need a small fixed batch for visualization consistency
-test_loader = DataLoader(test_dataset, batch_size=2, shuffle=True) 
+test_loader = DataLoader(test_dataset, batch_size=4, shuffle=True) 
 fixed_test_batch = next(iter(test_loader)) # Grab one fixed batch to visualize progress on same images
 
 # --- LOGGING LISTS ---
