@@ -246,12 +246,12 @@ if __name__ == "__main__":
 
 # ## Split Data
 
-# In[21]:
+# In[28]:
 
 
 # split data into training and testing sets
 DATASET_SIZE = 3000 # number of training samples
-TRAIN_SPLIT = 0.1
+TRAIN_SPLIT = 0.9 # 90% training, 10% testing
 
 def get_train_test_filenames(path, dataset_size=None, split_ratio=0.8):
     """
@@ -270,7 +270,7 @@ def get_train_test_filenames(path, dataset_size=None, split_ratio=0.8):
     # 2. Sort for reproducibility
     filenames.sort()
 
-    # 3. Limit dataset size *before* adding full paths (optimization)
+    # 3. Limit dataset size before adding full paths (optimization)
     if dataset_size is not None:
         if dataset_size > len(filenames):
             print(f"Warning: Requested dataset_size ({dataset_size}) is larger than "
@@ -278,9 +278,7 @@ def get_train_test_filenames(path, dataset_size=None, split_ratio=0.8):
         else:
             filenames = filenames[:dataset_size]
 
-    # 4. Create full paths carefully
-    # We use os.path.abspath to resolve relative path issues once and for all
-    # This prevents the "Data/Photo/Data/Photo" issue by locking it to a real system path
+    # 4. Create full paths
     all_files = [os.path.abspath(os.path.join(path, x)) for x in filenames]
             
     # 5. Shuffle the data
