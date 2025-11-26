@@ -24,6 +24,16 @@ pip install -r requirements.txt
 ```
 - In the jupyter notebook, choose the venv with installed dependcies and run the notebook.
 
-
+### (Guide for long remote access train (>12h) on department hardware)
+- Use tmux to create a persistant terminal session so the training keep runing even after closing remote access.
+```shell
+tmux
+``` 
+- Detach the current session so it continue running in background via `Ctrl + b d` (hitting ctrl key and b key at the same time then d key)
+- You are now good to close the remote access session
+- To go back to the running training session use command
+```shell
+tmux attach
+```
 
 
