@@ -8,4 +8,5 @@ Data/post_processed_chinese_landscapes_paintings_huggingface/
 Data/post_processed_Landscape/
 Data/post_processed_chinese_landscapes_paintings_huggingface_1k/
 Data/chinese_landscapes_paintings_huggingface_1k/
+Data/xue2020_photo2painting_dataset/
 .venv/

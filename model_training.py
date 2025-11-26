@@ -3,7 +3,7 @@
 
 # # Google colab
 
-# In[12]:
+# In[1]:
 
 
 # if 'google.colab' in str(get_ipython()):
@@ -12,7 +12,7 @@
 #     GOOGLE_COLAB = False
 
 
-# In[13]:
+# In[2]:
 
 
 # # Mount Google Drive if in Colab
@@ -23,7 +23,7 @@
 
 # # Imports
 
-# In[14]:
+# In[3]:
 
 
 
@@ -49,7 +49,7 @@ from torchvision.utils import save_image
 from tqdm import tqdm # change to tqdm for .py scripts
 
 
-# In[15]:
+# In[4]:
 
 
 # using the assigned GPU
@@ -58,13 +58,13 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "3"
 
 # # GPU
 
-# In[16]:
+# In[5]:
 
 
 # !nvidia-smi
 
 
-# In[17]:
+# In[6]:
 
 
 def check_gpu():    
@@ -88,17 +88,21 @@ device = check_gpu()
 
 # # Data
 
-# In[18]:
+# In[7]:
 
 
 DATA_BASE_PATH = "Data/"
-SANITY_CHECK_DATA_PATH = os.path.join(DATA_BASE_PATH, "post_processed_chinese_landscapes_paintings_huggingface_1k/photos")  # used for sanity check the model training
-PAINTINGS_DATA_PATH = os.path.join(DATA_BASE_PATH, "post_processed_chinese_landscapes_paintings_huggingface/photos")        # full dataset of 35000 paintings
-PHOTOS_DATA_PATH = os.path.join(DATA_BASE_PATH, "post_processed_Landscape/photos")                                          # full dataset of 4319 landscape photos
-TEST_DATA_PATH = os.path.join(DATA_BASE_PATH, "post_processed_chinese_landscapes_paintings/photos")                         # Hidden test set, 25 paintings
+# SANITY_CHECK_DATA_PATH = os.path.join(DATA_BASE_PATH, "post_processed_chinese_landscapes_paintings_huggingface_1k/photos")  # used for sanity check the model training
+# PAINTINGS_DATA_PATH = os.path.join(DATA_BASE_PATH, "post_processed_chinese_landscapes_paintings_huggingface/photos")        # full dataset of 35000 paintings
+# PHOTOS_DATA_PATH = os.path.join(DATA_BASE_PATH, "post_processed_Landscape/photos")                                          # full dataset of 4319 landscape photos
+HIDDEN_TEST_DATA_PATH = os.path.join(DATA_BASE_PATH, "post_processed_chinese_landscapes_paintings/photos")                         # Hidden test set, 25 paintings
+TRAIN_PAINTINGS_DATA_PATH = os.path.join(DATA_BASE_PATH, "xue2020_photo2painting_dataset/trainA")                        # full dataset of 2000 paintings
+TRAIN_PHOTOS_DATA_PATH = os.path.join(DATA_BASE_PATH, "xue2020_photo2painting_dataset/trainB")                          # full dataset of 2192 landscape photos
+TEST_PHOTOS_DATA_PATH = os.path.join(DATA_BASE_PATH, "xue2020_photo2painting_dataset/testB")                    # full dataset of 119 landscape photos
+TEST_PAINTINGS_DATA_PATH = os.path.join(DATA_BASE_PATH, "xue2020_photo2painting_dataset/testA")                # full dataset of 119 paintings
 
 
-# In[19]:
+# In[8]:
 
 
 # get num images in a folder
@@ -115,15 +119,16 @@ def count_images_in_folder(folder_path):
     return len([name for name in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, name))])
 
 # Load the dataset from Hugging Face
-print(f"(*) Num images in folder {PHOTOS_DATA_PATH}: {count_images_in_folder(PHOTOS_DATA_PATH)}")
-print(f"(*) Num images in folder {PAINTINGS_DATA_PATH}: {count_images_in_folder(PAINTINGS_DATA_PATH)}")
-print(f"(*) Num images in folder {SANITY_CHECK_DATA_PATH}: {count_images_in_folder(SANITY_CHECK_DATA_PATH)}")
-print(f"(*) Num images in folder {TEST_DATA_PATH}: {count_images_in_folder(TEST_DATA_PATH)}")
+print(f"(*) Num images in folder {HIDDEN_TEST_DATA_PATH}: {count_images_in_folder(HIDDEN_TEST_DATA_PATH)}")
+print(f"(*) Num images in folder {TRAIN_PAINTINGS_DATA_PATH}: {count_images_in_folder(TRAIN_PAINTINGS_DATA_PATH)}")
+print(f"(*) Num images in folder {TRAIN_PHOTOS_DATA_PATH}: {count_images_in_folder(TRAIN_PHOTOS_DATA_PATH)}")
+print(f"(*) Num images in folder {TEST_PAINTINGS_DATA_PATH}: {count_images_in_folder(TEST_PAINTINGS_DATA_PATH)}")
+print(f"(*) Num images in folder {TEST_PHOTOS_DATA_PATH}: {count_images_in_folder(TEST_PHOTOS_DATA_PATH)}")
 
 
 # ## Dataset class
 
-# In[20]:
+# In[9]:
 
 
 class UnpairedDataset(Dataset):
@@ -219,8 +224,8 @@ def get_transforms(img_size=512, is_train=True):
 if __name__ == "__main__":
     
     # Example paths (Update these to your actual folders)
-    path_paintings = SANITY_CHECK_DATA_PATH
-    path_photos = PHOTOS_DATA_PATH
+    path_paintings = TRAIN_PAINTINGS_DATA_PATH
+    path_photos = TRAIN_PHOTOS_DATA_PATH
     
     # Create transforms
     transforms_ = get_transforms(img_size=512, is_train=True)
@@ -246,7 +251,7 @@ if __name__ == "__main__":
 
 # ## Split Data
 
-# In[28]:
+# In[10]:
 
 
 # split data into training and testing sets
@@ -298,22 +303,17 @@ def get_train_test_filenames(path, dataset_size=None, split_ratio=0.8):
 
 # test the function
 if __name__ == "__main__":
-    # get split data
-    train_photos, test_photos = get_train_test_filenames(PHOTOS_DATA_PATH, dataset_size=DATASET_SIZE, split_ratio=TRAIN_SPLIT) # landscape photos
-    train_paintings, test_paintings = get_train_test_filenames(PAINTINGS_DATA_PATH, dataset_size=DATASET_SIZE, split_ratio=TRAIN_SPLIT) # chinese landscape paintings
     # to dataset objects
     train_dataset = UnpairedDataset(
-        root_a=PAINTINGS_DATA_PATH,
-        root_b=PHOTOS_DATA_PATH,
+        root_a=TRAIN_PAINTINGS_DATA_PATH,
+        root_b=TRAIN_PHOTOS_DATA_PATH,
         transforms_=get_transforms(img_size=512, is_train=True),
-        preloaded_split=(train_paintings, train_photos)
     )
 
     test_dataset = UnpairedDataset(
-        root_a=PAINTINGS_DATA_PATH,
-        root_b=PHOTOS_DATA_PATH,
+        root_a=TEST_PAINTINGS_DATA_PATH,
+        root_b=TEST_PHOTOS_DATA_PATH,
         transforms_=get_transforms(img_size=512, is_train=False),
-        preloaded_split=(test_paintings, test_photos)
     )
 
     # Sanity check
@@ -328,7 +328,7 @@ if __name__ == "__main__":
 
 # # GAN
 
-# In[22]:
+# In[11]:
 
 
 def init_weights_gaussian(m):
@@ -352,7 +352,7 @@ def init_weights_gaussian(m):
             torch.nn.init.constant_(m.bias.data, 0.0)
 
 
-# In[23]:
+# In[12]:
 
 
 class ResidualBlock(nn.Module):
@@ -568,7 +568,7 @@ class Discriminator(nn.Module):
         return self.model(x)
 
 
-# In[24]:
+# In[13]:
 
 
 class VGGLoss(nn.Module):
@@ -666,7 +666,7 @@ class GANLoss(nn.Module):
 
 # # Training
 
-# In[25]:
+# In[14]:
 
 
 def save_checkpoint(state, save_path, is_best=False):
@@ -691,7 +691,7 @@ def save_checkpoint(state, save_path, is_best=False):
     print(f"Checkpoint saved: {filename}")
 
 
-# In[26]:
+# In[15]:
 
 
 class SketchToPhotoInference:
@@ -792,7 +792,7 @@ class SketchToPhotoInference:
 #         print("Error: Model checkpoint or input image not found. Please check paths.")
 
 
-# In[27]:
+# In[16]:
 
 
 # --- CONFIGURATION ---
@@ -806,10 +806,10 @@ CHECKPOINT_DIR = "./checkpoints"
 K_STEPS = 1  # Update Discriminator every K steps, K = 1 for standard GAN training, 3 cause instability
 
 # Loss Weights
-LAMBDA_GAN = 2 # responsible for adversarial loss. 1 in original paper, increased to 4 for stronger GAN influence
+LAMBDA_GAN = 1 # responsible for adversarial loss. 1 in original paper, increased to 4 for stronger GAN influence
 LAMBDA_DUAL = 10 # responsible for dual consistency loss - feature + semantic. 10 in original paper, decreased to 8 for balance
 LAMBDA_ID = 5 # responsible for identity loss - helps preserve color composition
-MU = 0.8 # weight for semantic loss within dual consistency, 1 in original paper, increase to retain original features, decrease to shift more towards target domain
+MU = 1 # weight for semantic loss within dual consistency, 1 in original paper, increase to retain original features, decrease to shift more towards target domain
 
 # Initialize global step counter
 GLOBAL_STEP = 0
@@ -839,27 +839,25 @@ criterion_Id = torch.nn.L1Loss()
 transforms_train = get_transforms(img_size=512, is_train=True)
 transforms_test = get_transforms(img_size=512, is_train=False)
 
-train_paintings, test_paintings = get_train_test_filenames(PAINTINGS_DATA_PATH, dataset_size=DATASET_SIZE, split_ratio=TRAIN_SPLIT) # chinese landscape paintings
-train_photos, test_photos = get_train_test_filenames(PHOTOS_DATA_PATH, dataset_size=DATASET_SIZE, split_ratio=TRAIN_SPLIT) # landscape photos
+# train_paintings, test_paintings = get_train_test_filenames(SANITY_CHECK_DATA_PATH, dataset_size=DATASET_SIZE, split_ratio=TRAIN_SPLIT) # chinese landscape paintings
+# train_photos, test_photos = get_train_test_filenames(PHOTOS_DATA_PATH, dataset_size=DATASET_SIZE, split_ratio=TRAIN_SPLIT) # landscape photos
 
 # create datasets
 train_dataset = UnpairedDataset(
-    root_a=PAINTINGS_DATA_PATH,
-    root_b=PHOTOS_DATA_PATH,
+    root_a=TRAIN_PAINTINGS_DATA_PATH,
+    root_b=TRAIN_PHOTOS_DATA_PATH,
     transforms_=transforms_train,
-    preloaded_split=(train_paintings, train_photos)
 )
 
 test_dataset = UnpairedDataset(
-    root_a=PAINTINGS_DATA_PATH,
-    root_b=PHOTOS_DATA_PATH,
+    root_a=TEST_PAINTINGS_DATA_PATH,
+    root_b=TEST_PHOTOS_DATA_PATH,
     transforms_=transforms_test,
-    preloaded_split=(test_paintings, test_photos)
 )
 
 train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
 # We only need a small fixed batch for visualization consistency
-test_loader = DataLoader(test_dataset, batch_size=4, shuffle=True) 
+test_loader = DataLoader(test_dataset, batch_size=2, shuffle=True) 
 fixed_test_batch = next(iter(test_loader)) # Grab one fixed batch to visualize progress on same images
 
 # --- LOGGING LISTS ---
@@ -929,25 +927,25 @@ with tqdm(range(1, EPOCHS + 1), desc=f"{start_time.strftime('%H:%M:%S')} - Train
             if GLOBAL_STEP % K_STEPS == 0: # Update D every K steps
                 optimizer_D.zero_grad()
 
-                # Real Loss with Label Smoothing (0.9 instead of 1.0) to stabilize D
-                pred_real_X = netD_X(real_X)
-                loss_D_real_X = criterion_GAN(pred_real_X, torch.tensor(0.9).to(device).expand_as(pred_real_X))
+                # # Real Loss with Label Smoothing (0.9 instead of 1.0) to stabilize D
+                # pred_real_X = netD_X(real_X)
+                # loss_D_real_X = criterion_GAN(pred_real_X, torch.tensor(0.9).to(device).expand_as(pred_real_X))
                 
-                pred_real_Y = netD_Y(real_Y)
-                loss_D_real_Y = criterion_GAN(pred_real_Y, torch.tensor(0.9).to(device).expand_as(pred_real_Y))
+                # pred_real_Y = netD_Y(real_Y)
+                # loss_D_real_Y = criterion_GAN(pred_real_Y, torch.tensor(0.9).to(device).expand_as(pred_real_Y))
 
-                # Fake Loss (using detached fakes so G doesn't get gradients here)
-                pred_fake_X = netD_X(fake_X.detach())
-                loss_D_fake_X = criterion_GAN(pred_fake_X, torch.zeros_like(pred_fake_X))
+                # # Fake Loss (using detached fakes so G doesn't get gradients here)
+                # pred_fake_X = netD_X(fake_X.detach())
+                # loss_D_fake_X = criterion_GAN(pred_fake_X, torch.zeros_like(pred_fake_X))
                 
-                pred_fake_Y = netD_Y(fake_Y.detach())
-                loss_D_fake_Y = criterion_GAN(pred_fake_Y, torch.zeros_like(pred_fake_Y))
+                # pred_fake_Y = netD_Y(fake_Y.detach())
+                # loss_D_fake_Y = criterion_GAN(pred_fake_Y, torch.zeros_like(pred_fake_Y))
                 
-                loss_D_X = (loss_D_real_X + loss_D_fake_X) * 0.5
-                loss_D_Y = (loss_D_real_Y + loss_D_fake_Y) * 0.5
+                # loss_D_X = (loss_D_real_X + loss_D_fake_X) * 0.5
+                # loss_D_Y = (loss_D_real_Y + loss_D_fake_Y) * 0.5
 
-                # loss_D_X = (criterion_GAN(netD_X(real_X), True) + criterion_GAN(netD_X(fake_X.detach()), False)) * 0.5
-                # loss_D_Y = (criterion_GAN(netD_Y(real_Y), True) + criterion_GAN(netD_Y(fake_Y.detach()), False)) * 0.5
+                loss_D_X = (criterion_GAN(netD_X(real_X), True) + criterion_GAN(netD_X(fake_X.detach()), False)) * 0.5
+                loss_D_Y = (criterion_GAN(netD_Y(real_Y), True) + criterion_GAN(netD_Y(fake_Y.detach()), False)) * 0.5
 
                 total_loss_D = loss_D_X + loss_D_Y
                 total_loss_D.backward()
@@ -1012,4 +1010,43 @@ with tqdm(range(1, EPOCHS + 1), desc=f"{start_time.strftime('%H:%M:%S')} - Train
             print("Validation visuals and graphs saved.")
         # update progress bar
         pbar.set_postfix({'G Loss': f"{avg_g_loss:.4f}", 'D Loss': f"{avg_d_loss:.4f}"})
+
+
+# ## Load model
+
+# In[ ]:
+
+
+netG.load_state_dict(torch.load('./checkpoints/checkpoint_latest.pth')['netG_state_dict'])
+netF.load_state_dict(torch.load('./checkpoints/checkpoint_latest.pth')['netF_state_dict'])
+
+hidden_test_dataset = UnpairedDataset(
+    root_a=HIDDEN_TEST_DATA_PATH,
+    root_b=HIDDEN_TEST_DATA_PATH,
+    transforms_=transforms_test,
+)
+fixed_test_batch = next(iter(DataLoader(hidden_test_dataset, batch_size=5, shuffle=True)))
+netG.eval(); netF.eval()
+with torch.no_grad():
+    val_X = fixed_test_batch['A'].to(DEVICE)
+    val_Y = fixed_test_batch['B'].to(DEVICE)
+    
+    # Generate Visuals
+    val_fake_Y = netG(val_X) # Sketch -> Photo
+    val_fake_X = netF(val_Y) # Photo -> Sketch
+    
+    # Simple Metric: Reconstruction L1 (Just to track numeric stability)
+    val_rec_X = netF(val_fake_Y)
+    val_l1 = torch.nn.functional.l1_loss(val_X, val_rec_X).item()
+    print(f"Validation Metric (Cycle Consistency L1): {val_l1:.4f}")
+
+    # Concatenate images for saving: [Real Sketch, Generated Photo, Real Photo, Generated Sketch]
+    # Unnormalize from [-1, 1] to [0, 1] for saving
+    visuals_A = torch.cat([val_X, val_fake_Y], dim=0) * 0.5 + 0.5
+    visuals_B = torch.cat([val_Y, val_fake_X], dim=0) * 0.5 + 0.5
+    
+    save_image(visuals_A, f"{SAVE_DIR}/images/inference_test_sketch2photo.png", nrow=4)
+    save_image(visuals_B, f"{SAVE_DIR}/images/inference_test_photo2sketch.png", nrow=4)
+    
+print("Validation visuals and graphs saved.")
 

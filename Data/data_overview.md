@@ -1,16 +1,21 @@
 - # Data
-	- https://huggingface.co/datasets/mingyy/chinese_landscape_paintings - 5000 images
+	- https://huggingface.co/datasets/mingyy/chinese_landscape_paintings - 5000 images - DROP DUE TO LOW PAINTING QUALITY
 		- Target - generated landscape target
 		- filename
 		- image_caption
 		- source - original painintings/sketches
 		- hed -  Edge detection
-	- https://huggingface.co/datasets/WUYONGF/chinese_painting - 30 high res images
+	- https://huggingface.co/datasets/WUYONGF/chinese_painting - 30 high res images - WILL BE USED FOR HIDDEN TEST (FINAL TEST)
 		- image - original sketches
 		- text - caption
-	- https://www.kaggle.com/datasets/myzhang1029/chinese-landscape-painting-dataset - 2000 images
+	- https://www.kaggle.com/datasets/myzhang1029/chinese-landscape-painting-dataset - 2000 images - DROP DUE TO LOW PAINTING QUALITY
 		- image
-	- https://www.kaggle.com/datasets/arnaud58/landscape-pictures - - 4000 landscape images
+	- https://www.kaggle.com/datasets/arnaud58/landscape-pictures - 4000 landscape images - DROP DUE TO REDUNDANT
+	- https://www.kaggle.com/datasets/helloeyes/chinese-landscape-painting2photo - 2192 quality chinese landscape paintings and landscape photos for training - USED THIS FOR TRAINING
+		- Test A - paintings
+		- Test B - photos
+		- Train A - paintings
+		- Train B - photos
 
 - # Problem
 	-
