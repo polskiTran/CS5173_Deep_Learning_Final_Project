@@ -123,4 +123,28 @@ uv run model_training.py
 tmux attach
 ```
 
+## CycleGAN Overview
+### Model Architecture
+- Generators (G: X->Y and F: Y->X)
+    + Utilized GeneratorRelaxed with 9 Residual Blocks
+- Discriminators (D_X and D_Y)
+### Loss Functions
+- Adversarial Loss (LSGAN)
+- Cycle-Consistency Loss
+- Identity Loss
+### Training Stabilization
+- Image Pool (50 images): The discriminator is trained using a history of 50 previously generated images rather than just the most recent ones. This technique stabilizes adversarial training and reduces discriminator overfitting
+- Linear Learning Rate Decay: 
+    - Constant LR (0.0002) for first 100 epochs
+    - Linearly decays to zero for last 100 epochs
+### Training Config
+- Image size: 512x512
+- Epochs: 200
+- Batch size: 1
+- Optimizer: Adam(beta1=0.5, beta2=0.999)
+- Learning rate: 0.0002
+- LR Decay: epochs 100-200
+- Val interval: 10 epochs
+- Loss weights: λGAN=1, λCYCLE=10, λID=5
+
 
