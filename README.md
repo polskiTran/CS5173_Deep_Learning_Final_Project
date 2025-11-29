@@ -20,7 +20,7 @@
 
 ## Objective Functions
 - In DLP GAN paper:
-$$
+```math
 \begin{align}
 \min_{G,F}\;\max_{D_X,D_Y}\; 
 L_{\text{Total}}(G, F, D_X, D_Y)
@@ -39,7 +39,7 @@ L_{\text{Total}}(G, F, D_X, D_Y)
    \right) \\
 &\quad + \lambda_{\text{id}} L_{\text{id}}(G, F)
 \end{align}
-$$
+```
 - The training objective is a weighted sum of four loss components:
     - Adversarial Loss ($L_{\text{GAN}}$​): Utilizes Least Squares GAN (LSGAN) loss rather than standard Cross-Entropy. This provides smoother gradients and penalizes samples based on their distance from the decision boundary, reducing vanishing gradient problems.
     - Dual-Consistency Loss ($L_\text{Dual}$): Designed to balance realism and abstraction by enforcing consistency at two levels:
