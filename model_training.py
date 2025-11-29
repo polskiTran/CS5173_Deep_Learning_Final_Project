@@ -3,7 +3,7 @@
 
 # # Google colab
 
-# In[50]:
+# In[2]:
 
 
 # if 'google.colab' in str(get_ipython()):
@@ -12,7 +12,7 @@
 #     GOOGLE_COLAB = False
 
 
-# In[51]:
+# In[3]:
 
 
 # # Mount Google Drive if in Colab
@@ -23,7 +23,7 @@
 
 # # Imports
 
-# In[52]:
+# In[4]:
 
 
 
@@ -49,7 +49,7 @@ from torchvision.utils import save_image
 from tqdm import tqdm # change to tqdm for .py scripts
 
 
-# In[53]:
+# In[5]:
 
 
 # using the assigned GPU
@@ -58,13 +58,13 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "3"
 
 # # GPU
 
-# In[54]:
+# In[6]:
 
 
 # !nvidia-smi
 
 
-# In[55]:
+# In[7]:
 
 
 def check_gpu():    
@@ -88,7 +88,7 @@ device = check_gpu()
 
 # # Data
 
-# In[56]:
+# In[8]:
 
 
 DATA_BASE_PATH = "Data/"
@@ -100,7 +100,7 @@ PAINTINGS_DATA_PATH = os.path.join(DATA_BASE_PATH, "xue2020_dataset/trainA")    
 PHOTOS_DATA_PATH = os.path.join(DATA_BASE_PATH, "post_processed_Landscape/photos")                              # full dataset of 4319 landscape photos
 
 
-# In[57]:
+# In[9]:
 
 
 # get num images in a folder
@@ -124,7 +124,7 @@ print(f"(*) Num images in folder {PHOTOS_DATA_PATH}: {count_images_in_folder(PHO
 
 # ## Dataset class
 
-# In[58]:
+# In[10]:
 
 
 class UnpairedDataset(Dataset):
@@ -251,14 +251,14 @@ if __name__ == "__main__":
 
 # ## Split Data
 
-# In[59]:
+# In[26]:
 
 
 # split data into training and testing sets
 DATASET_SIZE = 3000 # number of training samples
 TRAIN_SPLIT = 0.9 # 90% training, 10% testing
 
-def get_train_test_filenames(path, dataset_size=None, split_ratio=0.8):
+def get_train_test_filenames(path, dataset_size=None, split_ratio=0.8, seed=42):
     """
     Splits image filenames from a directory into training and testing sets.
     """
@@ -286,7 +286,8 @@ def get_train_test_filenames(path, dataset_size=None, split_ratio=0.8):
     # 4. Create full paths
     all_files = [os.path.abspath(os.path.join(path, x)) for x in filenames]
             
-    # 5. Shuffle the data
+    # 5. Shuffle the data with a fixed seed for reproducibility
+    random.seed(seed)
     random.shuffle(all_files)
     
     # 6. Calculate split index
@@ -348,7 +349,7 @@ if __name__ == "__main__":
 
 # # GAN
 
-# In[60]:
+# In[12]:
 
 
 def init_weights_gaussian(m):
@@ -372,7 +373,7 @@ def init_weights_gaussian(m):
             torch.nn.init.constant_(m.bias.data, 0.0)
 
 
-# In[61]:
+# In[13]:
 
 
 class ResidualBlock(nn.Module):
@@ -588,7 +589,7 @@ class Discriminator(nn.Module):
         return self.model(x)
 
 
-# In[62]:
+# In[14]:
 
 
 class VGGLoss(nn.Module):
@@ -686,7 +687,7 @@ class GANLoss(nn.Module):
 
 # # Training
 
-# In[63]:
+# In[15]:
 
 
 def save_checkpoint(state, save_path, is_best=False):
@@ -711,7 +712,7 @@ def save_checkpoint(state, save_path, is_best=False):
     print(f"Checkpoint saved: {filename}")
 
 
-# In[64]:
+# In[16]:
 
 
 class SketchToPhotoInference:
@@ -812,24 +813,24 @@ class SketchToPhotoInference:
 #         print("Error: Model checkpoint or input image not found. Please check paths.")
 
 
-# In[67]:
+# In[ ]:
 
 
 # --- CONFIGURATION ---
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 LR = 0.0002
 EPOCHS = 200 # 200
-BATCH_SIZE = 2
+BATCH_SIZE = 1
 VAL_INTERVAL = 10  # Run validation every 10 epochs
 SAVE_DIR = "./results"
 CHECKPOINT_DIR = "./checkpoints"
 K_STEPS = 1  # Update Discriminator every K steps, K = 1 for standard GAN training, 3 cause instability
 
 # Loss Weights
-LAMBDA_GAN = 1 # responsible for adversarial loss. 1 in original paper, increased to 4 for stronger GAN influence
-LAMBDA_DUAL = 10 # responsible for dual consistency loss - feature + semantic. 10 in original paper, decreased to 8 for balance
-LAMBDA_ID = 5 # responsible for identity loss - helps preserve color composition
-MU = 1 # weight for semantic loss within dual consistency, 1 in original paper, increase to retain original features, decrease to shift more towards target domain
+LAMBDA_GAN = 4 # responsible for adversarial loss. 1 in original paper, increased to 4 for stronger GAN influence
+LAMBDA_DUAL = 8 # responsible for dual consistency loss - feature + semantic. 10 in original paper, decreased to 8 for balance, decrease to shift more towards target domain
+LAMBDA_ID = 3 # responsible for identity loss - helps preserve color composition
+MU = 0.8 # weight for semantic loss within dual consistency, 1 in original paper, increase to retain original features, decrease to shift more towards target domain
 
 # Initialize global step counter
 GLOBAL_STEP = 0
@@ -859,8 +860,8 @@ criterion_Id = torch.nn.L1Loss()
 transforms_train = get_transforms(img_size=512, is_train=True)
 transforms_test = get_transforms(img_size=512, is_train=False)
 
-train_paintings, test_paintings = get_train_test_filenames(PAINTINGS_DATA_PATH, dataset_size=DATASET_SIZE, split_ratio=TRAIN_SPLIT) # chinese landscape paintings
-train_photos, test_photos = get_train_test_filenames(PHOTOS_DATA_PATH, dataset_size=DATASET_SIZE, split_ratio=TRAIN_SPLIT) # landscape photos
+train_paintings, test_paintings = get_train_test_filenames(PAINTINGS_DATA_PATH, dataset_size=DATASET_SIZE, split_ratio=TRAIN_SPLIT, seed=42) # chinese landscape paintings
+train_photos, test_photos = get_train_test_filenames(PHOTOS_DATA_PATH, dataset_size=DATASET_SIZE, split_ratio=TRAIN_SPLIT, seed=42) # landscape photos
 
 # create datasets
 train_dataset = UnpairedDataset(
@@ -887,7 +888,7 @@ print(f"(*) Number of testing photos: {len(test_dataset.files_b)}")
 
 train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
 # We only need a small fixed batch for visualization consistency
-test_loader = DataLoader(test_dataset, batch_size=4, shuffle=True) 
+test_loader = DataLoader(test_dataset, batch_size=2, shuffle=True) 
 fixed_test_batch = next(iter(test_loader)) # Grab one fixed batch to visualize progress on same images
 
 # --- LOGGING LISTS ---
@@ -1000,6 +1001,7 @@ with tqdm(range(1, EPOCHS + 1), desc=f"{start_time.strftime('%H:%M:%S')} - Train
 
         # 2. VALIDATION & GRAPHING PHASE (Every X Epochs)
         if epoch % VAL_INTERVAL == 0:
+            CHECKPOINT_DIR = SAVE_DIR + f"/checkpoints_epoch_{epoch}" # also save checkpoints per interval
             print(f"--- Running Validation for Epoch {epoch} ---")
             
             # Save Checkpoint
@@ -1044,7 +1046,7 @@ with tqdm(range(1, EPOCHS + 1), desc=f"{start_time.strftime('%H:%M:%S')} - Train
 
 # ## Load model
 
-# In[ ]:
+# In[24]:
 
 
 netG.load_state_dict(torch.load('./checkpoints/checkpoint_latest.pth')['netG_state_dict'])
@@ -1052,10 +1054,10 @@ netF.load_state_dict(torch.load('./checkpoints/checkpoint_latest.pth')['netF_sta
 
 hidden_test_dataset = UnpairedDataset(
     root_a=HIDDEN_TEST_DATA_PATH,
-    root_b=HIDDEN_TEST_DATA_PATH,
+    root_b=PHOTOS_DATA_PATH,
     transforms_=transforms_test,
 )
-fixed_test_batch = next(iter(DataLoader(hidden_test_dataset, batch_size=5, shuffle=True)))
+fixed_test_batch = next(iter(DataLoader(test_dataset, batch_size=4, shuffle=True)))
 netG.eval(); netF.eval()
 with torch.no_grad():
     val_X = fixed_test_batch['A'].to(DEVICE)
@@ -1079,4 +1081,10 @@ with torch.no_grad():
     save_image(visuals_B, f"{SAVE_DIR}/images/inference_test_photo2sketch.png", nrow=4)
     
 print("Validation visuals and graphs saved.")
+
+
+# In[ ]:
+
+
+
 
