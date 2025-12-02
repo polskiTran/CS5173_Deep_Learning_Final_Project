@@ -19,6 +19,7 @@ dependencies = [
     "datasets>=4.4.1",
     "opencv-python>=4.11.0.86",
     "gdown>=5.2.0",
+    "torchmetrics[image]>=1.8.2",
 ]
 
 [dependency-groups]
