@@ -1,8 +1,8 @@
-# Semantic-aware GAN model
-
+# Chinese Abstract Landscape Art GAN Colorization Task
+---
 ## Problem
 > “How much do explicit semantic constraints improve sketch→photo realism and structure, over a strong cycle GAN baseline?” - An implementation of [2024 DLP GAN paper](https://arxiv.org/abs/2403.03456) using Abstract Chinese Landscape Painting and Photo of Landscape 
-
+---
 ## Architecture Overview (Based on [DLP GAN](https://arxiv.org/abs/2403.03456))
 > The core framework relies on an asymmetric mapping strategy to handle the information imbalance between the two domains: Domain $X$ (Paintings/Abstract) and Domain $Y$ (Photos/Dense Information).
 ### Generator
@@ -18,7 +18,7 @@
 ### Discriminator
 - The system employs two PatchGAN discriminators ($D_X$​,$D_Y$​). These classify 70×70 overlapping image patches as real or fake, focusing on high-frequency structural correctness rather than global image context.
 
-## Objective Functions
+### Objective Functions
 - In DLP GAN paper:
 ```math
 \begin{align}
@@ -48,7 +48,7 @@ L_{\text{Total}}(G, F, D_X, D_Y)
         > Note: While the original paper uses DexiNed for semantic edge extraction, the current implementation utilizes a differentiable Sobel Filter approximation.
     - Identity Loss ($L_\text{id}$): Standard L1​ loss between input and output when the target domain image is fed into the generator (e.g., $G(y)≈y$). Used to preserve color composition.
 
-## Training Config
+### Training Config
 - The current setup diverges from the original paper's hyperparameters to match with the dataset 
 
 - Hyperparameters
@@ -66,13 +66,39 @@ L_{\text{Total}}(G, F, D_X, D_Y)
     - $λ_\text{ID}=3$ (Original: 5).
         - Rationale: Reduced. High identity loss forces the model to mimic the input's color histogram. Since sketches/paintings are often monochromatic, high Lid​ prevents the model from learning the vibrant colors of the photo domain.
 
+---
+
+## CycleGAN Overview
+### Model Architecture
+- Generators (G: X->Y and F: Y->X)
+    + Utilized GeneratorRelaxed with 9 Residual Blocks
+- Discriminators (D_X and D_Y)
+### Loss Functions
+- Adversarial Loss (LSGAN)
+- Cycle-Consistency Loss
+- Identity Loss
+### Training Stabilization
+- Image Pool (50 images): The discriminator is trained using a history of 50 previously generated images rather than just the most recent ones. This technique stabilizes adversarial training and reduces discriminator overfitting
+- Linear Learning Rate Decay: 
+    - Constant LR (0.0002) for first 100 epochs
+    - Linearly decays to zero for last 100 epochs
+### Training Config
+- Image size: 512x512
+- Epochs: 200
+- Batch size: 1
+- Optimizer: Adam(beta1=0.5, beta2=0.999)
+- Learning rate: 0.0002
+- LR Decay: epochs 100-200
+- Val interval: 10 epochs
+- Loss weights: λGAN=1, λCYCLE=10, λID=5
+
 ## Directory Index
 - `Data/`
     - `xue2020_dataset` - 2,000+ Abstract Chinese Paintings (512x512) collected thanks to [xue, 2020](https://github.com/alicex2020/Chinese-Landscape-Painting-Dataset)
     - `data_processing.ipynb` - Notebook for data downloading and processing (only applies to Lanscape dataset)
     - `data_overview.md` - Overview of experimented dataset
     - `hidden_test` - Some cherry picked hidden test painting for Painting2Photo
-- `results_[...]\` - folders of experimented model results and demo. Check `results_CANDIDATE]` for latest models weights
+- `results_[...]\` - folders of experimented model results and demo. Check `results_CANDIDATE]` for models weights for DLP-GAN (*recommend epoch 170 weights*) and `results_cycle` for models weights for cycle GAN (*recommend epoch 200 weights*)
     - `checkpoints` - contains model weights
     - `graghs` - training graphs
     - `images` - training images validation
@@ -123,28 +149,6 @@ uv run model_training.py
 tmux attach
 ```
 
-## CycleGAN Overview
-### Model Architecture
-- Generators (G: X->Y and F: Y->X)
-    + Utilized GeneratorRelaxed with 9 Residual Blocks
-- Discriminators (D_X and D_Y)
-### Loss Functions
-- Adversarial Loss (LSGAN)
-- Cycle-Consistency Loss
-- Identity Loss
-### Training Stabilization
-- Image Pool (50 images): The discriminator is trained using a history of 50 previously generated images rather than just the most recent ones. This technique stabilizes adversarial training and reduces discriminator overfitting
-- Linear Learning Rate Decay: 
-    - Constant LR (0.0002) for first 100 epochs
-    - Linearly decays to zero for last 100 epochs
-### Training Config
-- Image size: 512x512
-- Epochs: 200
-- Batch size: 1
-- Optimizer: Adam(beta1=0.5, beta2=0.999)
-- Learning rate: 0.0002
-- LR Decay: epochs 100-200
-- Val interval: 10 epochs
-- Loss weights: λGAN=1, λCYCLE=10, λID=5
+
 
 
