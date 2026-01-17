@@ -5,6 +5,7 @@
 ---
 ## Architecture Overview (Based on [DLP GAN](https://arxiv.org/abs/2403.03456))
 > The core framework relies on an asymmetric mapping strategy to handle the information imbalance between the two domains: Domain $X$ (Paintings/Abstract) and Domain $Y$ (Photos/Dense Information).
+> See more with our [poster](https://github.com/polskiTran/CS5173_DLP-GAN_Implementation/blob/main/Document/UC%20Fall%2025%20Deep%20Learning%20Poster.pdf).
 ### Generator
 **Generator Strict ($G:X→Y)$:**
 - Purpose: Translating abstract paintings to detailed photos. This requires learning the color distribution of landscape targets in the photos and recreate in the paintings. 
